@@ -1,0 +1,18 @@
+[Unit]
+Description=uWSGI Service
+After=syslog.target
+
+[Service]
+ExecStart=/home/telescreen/.local/bin/uwsgi --ini /var/www/btools/uwsgi.ini
+ExecStop=-/bin/bash -c 'cd /home/telescreen/.local/bin/; ./uwsgi --stop /run/uwsgi/btools.pid'
+RuntimeDirectory=uwsgi
+User=telescreen
+Group=telescreen
+Restart=on-failure
+KillSignal=SIGQUIT
+Type=notify
+StandardError=syslog
+NotifyAccess=all
+
+[Install]
+WantedBy=multi-user.target

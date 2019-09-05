@@ -1,0 +1,55 @@
+{% extends '../base.html' %}
+
+{% block content %}
+<!-- production version, optimized for size and speed -->
+{% load static %}
+<link rel="stylesheet" href="{% static "rss.css" %}">
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+<script>
+  $(document).ready(function () {
+
+    $('#sidebarCollapse').on('click', function () {
+      $('.sidebar').toggleClass('active');
+    });
+
+  });
+</script>
+
+<div class="wrapper">
+  <nav class="sidebar">
+    <span><i class="fas fa-bars mt-3"></i> ALL</span>
+    <ul class="list-unstyled components">
+      {% for category in categories %}
+      <li class="active">
+        <a href="#{{ category.name }}" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">{{ category.name }}</a>
+        {% for source in category.source_set.all %}
+        <ul class="collapse list-unstyled show" id="{{ category.name }}">
+          <li>
+            <a href="#">{{ source.name }}</a>
+          </li>
+        </ul>
+        {% endfor %}
+      </li>
+      {% endfor %}
+    </ul>
+  </nav>
+
+  <div class="content w-100">
+    <ul class="nav ml-1">
+      <button type="button" id="sidebarCollapse" class="btn btn-info btn-sm">
+        <i class="fas fa-align-left"></i><span>Toggle</span>
+      </button>
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'rss-category-add' %}">Add Category</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'rss-source-add' %}">Add Source</a>
+      </li>
+    </ul>
+
+    {% block sub-content %}{% endblock %}
+
+  </div> <!-- End content -->
+</div> <!-- End wrapper -->
+
+{% endblock %}
