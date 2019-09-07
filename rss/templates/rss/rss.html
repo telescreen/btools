@@ -1,0 +1,219 @@
+{% extends '../base.html' %}
+
+{% block content %}
+{% load widget_tweaks %}
+{% load static %}
+<link rel="stylesheet" href="{% static "rss.css" %}">
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+
+<div class="wrapper">
+  <nav class="sidebar">
+    <span><i class="fas fa-bars mt-3"></i> ALL</span>
+    <ul class="list-unstyled components">
+      {% for category in categories %}
+      <li class="active">
+        <a href="#{{ category.name }}" data-toggle="collapse" aria-expanded="false"
+          class="dropdown-toggle">{{ category.name }}</a>
+        {% for source in category.source_set.all %}
+        <ul class="collapse list-unstyled show" id="{{ category.name }}">
+          <li>
+            <a href="{% url 'rss-index' %}">{{ source.name }}</a>
+          </li>
+        </ul>
+        {% endfor %}
+      </li>
+      {% endfor %}
+    </ul>
+  </nav>
+
+  <script>
+    $(document).ready(function () {
+
+      $('#sidebarCollapse').on('click', function () {
+        $('.sidebar').toggleClass('active');
+      });
+
+    });
+  </script>
+
+  <div class="content w-100">
+    {% if messages %}
+      {% for message in messages %}
+      <div {% if message.tags == 'error' %} class="alert alert-danger"{% else %} class="alert alert-success" {% endif %} role="alert">
+        {{ message }}
+      </div>
+      {% endfor %}
+    {% endif %}
+
+    <ul class="nav mx-3">
+      <button type="button" id="sidebarCollapse" class="btn btn-info btn-sm">
+        <i class="fas fa-align-left"></i><span>Toggle</span>
+      </button>
+      <li class="nav-item">
+        <a class="nav-link" data-toggle="modal" data-target="#add-category-modal" data-dismiss="modal" href="#">Add Category</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-toggle="modal" data-target="#add-source-modal" data-dismiss="modal" href="#">Add Source</a>
+      </li>
+    </ul>
+
+    <div class="container" id="rss-app">
+      <div class="border rounded-lg mt-1">
+        <table class="table table-borderless table-sm table-fixed">
+          <thead class="thead-dark">
+            <tr>
+              <th scope="col" class="col-10">Headline</th>
+              <th scope="col" class="col-2">Datetime</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(feed, idx) in feeds" v-on:click="displayFeed(idx)"
+                :class="{'feed-unread': !feed.checked}">
+              <td class="col-10">[[ feed.title ]]</td>
+              <td class="col-2">[[ feed.created_at ]]</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="border rounded-lg mt-1">
+        <div v-if="content">
+          <h5>[[ content.title ]]</h5>
+          <span>author: [[ content.author ]]</span>
+          <hr>
+          <p v-html="content.content"></p>
+        </div>
+      </div>
+    </div>
+
+  </div> <!-- End content -->
+</div> <!-- End wrapper -->
+
+<script>
+    var app = new Vue({
+      delimiters: ['[[', ']]'],
+      el: '#rss-app',
+      data: {
+        feeds: undefined,
+        feedCount: 0,
+        content: undefined
+      },
+      created: function() {
+        let that = this;
+        let source_name = 'Slashdot';
+        $.ajax({
+          url: '/rss/loadfeeds/' + source_name,
+          method: 'GET',
+        }).done(that.fetchResult)
+      },
+      methods: {
+        fetchResult: function(data) {
+          if (data.status_code == 200) {
+            this.feeds = data.feeds;
+            this.feedCount = data.size;
+            this.content = this.feeds[0];
+          }
+        },
+
+        displayFeed: function(idx) {
+          this.content = this.feeds[idx];
+          this.content.checked = true;
+          $.ajax({
+            url: '/rss/updatefeed',
+            headers: {'X-CSRFToken': Cookies.get('csrftoken')},
+            method: 'POST',
+            data: {
+              'feed_id': this.content.id,
+              'checked': true
+            }
+          }).fail(function() {
+            console.log("Log failure here");
+          });
+        }
+      }
+    });
+  </script>
+
+
+
+<div class="modal fade" id="add-category-modal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add New Category</h3>
+      </div>
+      <div class="modal-body">
+        <form action="{% url 'rss-category-add' %}" method="POST">
+          {% csrf_token %}
+          {% for field in category_form.visible_fields %}
+          <div class="form-group">
+            {{ field.label_tag }}
+            {% if category_form.is_bound %}
+              {% if field.errors %}
+                {% render_field field class="form-control is-invalid" %}
+                {% for error in field.errors %}
+                  <div class="invalid-feedback">
+                  {{ error }}
+                  </div>
+                {% endfor %}
+              {% else %}
+                {% render_field field class="form-control is-valid" placeholder=field.name %}
+              {% endif %}
+            {% else %}
+              {% render_field field class="form-control" placeholder=field.name %}
+            {% endif %}
+
+            {% if field.help_text %}
+            <small class="form-text text-muted">{{ field.help_text }}</small>
+            {% endif %}
+          </div>
+          {% endfor %}
+          <button type="submit" class="btn btn-primary">Add Category</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="add-source-modal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add New Source</h3>
+      </div>
+      <div class="modal-body">
+        <form action="{% url 'rss-source-add' %}" method="POST">
+          {% csrf_token %}
+          {% for field in source_form.visible_fields %}
+          <div class="form-group">
+            {{ field.label_tag }}
+            {% if source_form.is_bound %}
+              {% if field.errors %}
+                {% render_field field class="form-control is-invalid" %}
+                {% for error in field.errors %}
+                  <div class="invalid-feedback">
+                  {{ error }}
+                  </div>
+                {% endfor %}
+              {% else %}
+                {% render_field field class="form-control is-valid" placeholder=field.name %}
+              {% endif %}
+            {% else %}
+              {% render_field field class="form-control" placeholder=field.name %}
+            {% endif %}
+
+            {% if field.help_text %}
+            <small class="form-text text-muted">{{ field.help_text }}</small>
+            {% endif %}
+          </div>
+          {% endfor %}
+          <button type="submit" class="btn btn-primary">Add Source</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

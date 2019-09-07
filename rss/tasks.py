@@ -12,15 +12,17 @@ logger = logging.getLogger(__name__)
 
 @shared_task
 def fetch_feed():
+    """ Routinely fetch feeds from remote sources """
     logger.info('--- Start to fetch new feed ---')
     all_sources = Source.objects.all()
     for source in all_sources:
-        d = feedparser.parse(source.url, etag=source.etag, modified=source.modified)
+        logger.info('etag=%s, modified=%s', source.etag, source.modified)
+        feeds = feedparser.parse(source.url, modified=source.modified, etag=source.etag)
 
         # Status != 304 means that there are new feeds
-        if d.status == 200:
-            logger.info("--- Fetching {} ---".format(source.url))
-            for entry in d.entries:
+        if feeds.status == 200:
+            logger.info('--- Fetching %s ---', source.url)
+            for entry in feeds.entries:
                 # Datetime parsed among RSS version is ntot
                 try:
                     published = entry.published_parsed
@@ -29,27 +31,32 @@ def fetch_feed():
                         published = entry.updated_parsed
                     except AttributeError:
                         published = entry.created_parsed
+
                 # Convert datetime back to string to store to database
                 if isinstance(published, time.struct_time):
                     published = time.strftime('%Y-%m-%dT%H:%M:%S%z', published)
                 else:
                     published = published.strftime('%Y-%m-%dT%H:%M:%S%z')
 
-                f = Feed(title=entry.title, link=entry.link, feed_id=entry.id,
-                         content=entry.summary, author=entry.author,
-                         updated_at=published, source=source)
-                # This function commit a entry everytime it parses
-                # This might affects performance in production environment with lots of feeds.
-                f.save()
-            # Update etag and modified
-            logger.info('Update etag and modified. etag={}, modified={}'.format(d.etag, d.modified))
-            source.etag = d.etag
-            source.modified = d.modified
-            source.save()
-            logger.info('Done processing all new entries')
+                # Only insert the feed if feed does not already exist.
+                if not Feed.objects.filter(feed_id=entry.id).exists():
+                    new_feed = Feed(title=entry.title, link=entry.link, feed_id=entry.id,
+                                    content=entry.summary, author=entry.author,
+                                    created_at=published, updated_at=published, source=source)
+                    # This function commit a entry everytime it parses
+                    # This might affects performance in production environment with lots of feeds.
+                    new_feed.save()
 
-        elif d.status == 304:
-            logger.info('Skipping because of no new entries')
+            # Update etag and modified
+            source.etag = feeds.etag
+            source.modified = feeds.modified
+            source.save()
+
+            logger.info('Update etag and modified. etag=%s, modified=%s', feeds.etag, feeds.modified)
+            logger.info('Done processing all new entries for %s', source.url)
+
+        elif feeds.status == 304:
+            logger.info('Skipping %s because of no new entries', source.url)
 
         else:
-            logger.error('Error while processing {}'.format(source.url))
+            logger.error('Error while processing %s', source.url)
