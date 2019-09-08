@@ -9,12 +9,12 @@ from django.contrib import messages
 from django.http import JsonResponse
 
 from .forms import CategoryForm, SourceForm
-from .models import Category, Source, Feed
+from .models import Category, Feed
 
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
-NUMBER_OF_FEEDS_PERPAGE = 50
+NUMBER_OF_FEEDS_PERPAGE = 100
 
 
 def index(request):
@@ -25,11 +25,26 @@ def index(request):
     return render(request, 'rss.html', {
         'categories': categories,
         'source_form': source_form,
-        'category_form': category_form})
+        'category_form': category_form
+    })
 
 
 def load_feeds(request, source_name=None):
-    """ Return feed results for a source through ajax """
+    """
+    Return feed results for a source through ajax
+    Response schema:
+       { 'feeds': [
+           'id': id,
+           'title: title,
+           'content': content,
+           'author': author,
+           'checked': checked,
+           'created_at': created_at ],
+          'size': feeds length,
+          'status_code': 200
+        }
+    """
+
     # We will get the feed of the first source to display
     result = {}
     if source_name is not None:
@@ -41,6 +56,7 @@ def load_feeds(request, source_name=None):
             result['feeds'].append({
                 'id': feed.id,
                 'title': feed.title,
+                'link': feed.link,
                 'content': feed.content,
                 'author': feed.author,
                 'checked': feed.checked,
@@ -48,6 +64,40 @@ def load_feeds(request, source_name=None):
             })
         result['size'] = feeds.count()
         result['status_code'] = 200
+    return JsonResponse(result)
+
+
+def load_categories(request):
+    """
+    Return all categories in the database
+    Response schema:
+       { 'categories': [
+             { 'name': category_name,
+               'sources': [
+                  'name': source name
+                ]
+             }
+          ]
+          'status_code': 200
+        }
+    """
+    result = {'categories': []}
+    categories = Category.objects.all().order_by('name')
+
+    for category in categories:
+        sources = category.source_set.all().order_by('name')
+        result['categories'].append({
+            'name': category.name,
+            'sources': []
+        })
+        for source in sources:
+            unread_count = source.feed_set.filter(checked=False).count()
+            result['categories'][-1]['sources'].append({
+                'name': source.name,
+                'unread_count': unread_count
+            })
+
+    result['status_code'] = 200
     return JsonResponse(result)
 
 
@@ -79,14 +129,11 @@ def category_add(request):
             messages.success(request, 'Category successfully added')
         else:
             messages.error(request, 'Could not create category. Category might already existed')
-        return redirect('/rss/')
-
+    return redirect('/rss/')
 
 
 def source_add(request):
     """ Add a new rss source """
-    update_interval = {'hourly': 1, 'daily': 24, 'weekly': 168, 'monthly': 672}
-
     if request.method == 'POST':
         # Process with adding category
         form = SourceForm(request.POST)
@@ -96,10 +143,9 @@ def source_add(request):
 
             # Following metadata will be parsed from Feed.s
             psource = feedparser.parse(source.url)
-            source.name = psource.channel.title
-            source.description = psource.channel.description
-            source.interval = int(psource.channel.sy_updatefrequency) * update_interval[psource.channel.sy_updateperiod]
+            source.name = psource.channel.get('title')
+            source.description = psource.channel.get('description')
 
             source.save()
             messages.success(request, 'Source successfully added')
-        return redirect('/rss/')
+    return redirect('/rss/')

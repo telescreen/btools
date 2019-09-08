@@ -24,13 +24,9 @@ def fetch_feed():
             logger.info('--- Fetching %s ---', source.url)
             for entry in feeds.entries:
                 # Datetime parsed among RSS version is ntot
-                try:
-                    published = entry.published_parsed
-                except AttributeError:
-                    try:
-                        published = entry.updated_parsed
-                    except AttributeError:
-                        published = entry.created_parsed
+                published = entry.get('published_parsed')
+                if not published:
+                    published = entry.get('updated_parsed') if entry.get('updated_parsed') else entry.get('created_parsed')
 
                 # Convert datetime back to string to store to database
                 if isinstance(published, time.struct_time):
@@ -38,21 +34,23 @@ def fetch_feed():
                 else:
                     published = published.strftime('%Y-%m-%dT%H:%M:%S%z')
 
+                author = entry.get('author')
+
                 # Only insert the feed if feed does not already exist.
                 if not Feed.objects.filter(feed_id=entry.id).exists():
                     new_feed = Feed(title=entry.title, link=entry.link, feed_id=entry.id,
-                                    content=entry.summary, author=entry.author,
+                                    content=entry.summary, author=author,
                                     created_at=published, updated_at=published, source=source)
                     # This function commit a entry everytime it parses
                     # This might affects performance in production environment with lots of feeds.
                     new_feed.save()
 
-            # Update etag and modified
-            source.etag = feeds.etag
-            source.modified = feeds.modified
+            # Update etag and modified. In case
+            source.etag = feeds.get('etag')
+            source.modified = feeds.get('modified')
             source.save()
 
-            logger.info('Update etag and modified. etag=%s, modified=%s', feeds.etag, feeds.modified)
+            logger.info('Update etag and modified. etag=%s, modified=%s', feeds.get('etag'), feeds.get('modified'))
             logger.info('Done processing all new entries for %s', source.url)
 
         elif feeds.status == 304:

@@ -118,3 +118,9 @@ span {
 #rss-app .table-fixed tbody tr.feed-unread {
     font-weight: bold;
 }
+
+div.card div.card-header {
+    background: #343a40;
+    color: #fff;
+    font-weight: bold;
+}

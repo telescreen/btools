@@ -7,35 +7,23 @@
 <script src="https://cdn.jsdelivr.net/npm/vue"></script>
 <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
 
-<div class="wrapper">
-  <nav class="sidebar">
+<div class="wrapper" id="rss-app">
+
+  <nav class="sidebar" :class="{'active': hideSidebar}">
     <span><i class="fas fa-bars mt-3"></i> ALL</span>
     <ul class="list-unstyled components">
-      {% for category in categories %}
-      <li class="active">
-        <a href="#{{ category.name }}" data-toggle="collapse" aria-expanded="false"
-          class="dropdown-toggle">{{ category.name }}</a>
-        {% for source in category.source_set.all %}
-        <ul class="collapse list-unstyled show" id="{{ category.name }}">
-          <li>
-            <a href="{% url 'rss-index' %}">{{ source.name }}</a>
+      <li v-for="category in categories">
+        <a :href="'#'+category.name" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">[[ category.name ]]</a>
+        <ul class="collapse list-unstyled show" :id="category.name">
+          <li v-for="source in category.sources">
+            <a href="#" v-on:click="updateSource(source.name)">
+              [[ source.name ]] <span class="badge badge-light float-right mr-2">[[ source.unread_count ]]</span>
+            </a>
           </li>
         </ul>
-        {% endfor %}
       </li>
-      {% endfor %}
     </ul>
   </nav>
-
-  <script>
-    $(document).ready(function () {
-
-      $('#sidebarCollapse').on('click', function () {
-        $('.sidebar').toggleClass('active');
-      });
-
-    });
-  </script>
 
   <div class="content w-100">
     {% if messages %}
@@ -47,7 +35,7 @@
     {% endif %}
 
     <ul class="nav mx-3">
-      <button type="button" id="sidebarCollapse" class="btn btn-info btn-sm">
+      <button type="button" class="btn btn-info btn-sm" v-on:click="hideSidebar = !hideSidebar">
         <i class="fas fa-align-left"></i><span>Toggle</span>
       </button>
       <li class="nav-item">
@@ -58,19 +46,20 @@
       </li>
     </ul>
 
-    <div class="container" id="rss-app">
+    <div class="container mt-1">
+      <h5>[[ source_name ]]</h5>
       <div class="border rounded-lg mt-1">
         <table class="table table-borderless table-sm table-fixed">
           <thead class="thead-dark">
             <tr>
-              <th scope="col" class="col-10">Headline</th>
+              <th scope="col" class="col-10 px-2">Headline</th>
               <th scope="col" class="col-2">Datetime</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(feed, idx) in feeds" v-on:click="displayFeed(idx)"
                 :class="{'feed-unread': !feed.checked}">
-              <td class="col-10">[[ feed.title ]]</td>
+              <td class="col-10"><i class="far fa-sticky-note" v-if="!feed.checked"></i> [[ feed.title ]]</td>
               <td class="col-2">[[ feed.created_at ]]</td>
             </tr>
           </tbody>
@@ -79,10 +68,13 @@
 
       <div class="border rounded-lg mt-1">
         <div v-if="content">
-          <h5>[[ content.title ]]</h5>
-          <span>author: [[ content.author ]]</span>
-          <hr>
-          <p v-html="content.content"></p>
+          <div class="card">
+            <div class="card-header p-2">[[ content.title ]]</div>
+            <a :href="content.link" target="_blank" class="card-link p-2">[[ content.link ]]</a>
+          </div>
+          <div class="card-body">
+            <p class="card-text" v-html="content.content"></p>
+          </div>
         </div>
       </div>
     </div>
@@ -95,25 +87,43 @@
       delimiters: ['[[', ']]'],
       el: '#rss-app',
       data: {
-        feeds: undefined,
-        feedCount: 0,
-        content: undefined
+        hideSidebar: false,
+        content: undefined,
+        source_name: '',
+        categories: {},
+        feeds: [],
       },
+
       created: function() {
         let that = this;
-        let source_name = 'Slashdot';
-        $.ajax({
-          url: '/rss/loadfeeds/' + source_name,
-          method: 'GET',
-        }).done(that.fetchResult)
+
+        $.ajax({url: '/rss/loadcategories'}).done(function(data) {
+          that.categories = data.categories;
+          var unempty_category = that.categories.find(element => {
+            return element.sources.length > 0;
+          });
+          that.source_name = unempty_category.sources[0].name;
+          that.updateFeed();
+        });
       },
+
       methods: {
-        fetchResult: function(data) {
-          if (data.status_code == 200) {
-            this.feeds = data.feeds;
-            this.feedCount = data.size;
-            this.content = this.feeds[0];
-          }
+        updateFeed: function() {
+          var that = this;
+          $.ajax({
+            url: '/rss/loadfeeds/' + that.source_name,
+            method: 'GET',
+          }).done(function(data) {
+            if (data.status_code == 200) {
+              that.content = data.feeds[0];
+              that.feeds = data.feeds;
+            }
+          });
+        },
+
+        updateSource: function(name) {
+          this.source_name = name;
+          this.updateFeed();
         },
 
         displayFeed: function(idx) {
@@ -130,7 +140,7 @@
           }).fail(function() {
             console.log("Log failure here");
           });
-        }
+        },
       }
     });
   </script>

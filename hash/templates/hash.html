@@ -160,7 +160,7 @@
       },
 
       generateRandomSalt: function () {
-        let salt = window.crypto.getRandomValues(new Uint8Array(this.saltLength));
+        var salt = window.crypto.getRandomValues(new Uint8Array(this.saltLength));
         this.saltText = Utils.bytes2base64(salt);
       },
     },
