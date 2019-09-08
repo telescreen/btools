@@ -22,7 +22,7 @@ def index(request):
     categories = Category.objects.all()
     category_form = CategoryForm()
     source_form = SourceForm()
-    return render(request, 'rss/rss.html', {
+    return render(request, 'rss.html', {
         'categories': categories,
         'source_form': source_form,
         'category_form': category_form})

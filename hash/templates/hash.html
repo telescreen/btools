@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load widget_tweaks %}
+{% load static %}
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+
+<div class="container">
+  <div class="mx-5 my-3" id="hash-app">
+    <h3>Password Hashing</h3>
+
+    <table class="table table-sm">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Wiki</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="algo in algorithms">
+          <td>[[ algo.name ]]</td>
+          <td><a href="[[ algo.wiki ]]">[[ algo.wiki ]]</a></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h4>Generate</h4>
+
+    <div class="col-sm-0 my-3">
+      Result: <span style="color: green; font-weight: bold;"> [[ result ]]</span>
+    </div>
+
+    <form>
+      <div class="form-group row">
+        <label for="text" class="col-sm-2">Text</label>
+        <div class="col-sm-6">
+          <input id="text" type="text" class="form-control" placeholder="Password" v-model="rawText">
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label for="salt" class="col-sm-2">Salt</label>
+        <div class="col-sm-6">
+          <input id="salt" type="text" class="form-control" placeholder="Salt Value" v-model="saltText">
+        </div>
+        <div class="col-sm-1">
+          <input type="text" class="form-control" placeholder="Size" v-model="saltLength">
+        </div>
+        <div class="col-sm-2">
+          <button type="button" class="btn btn-primary" v-on:click="generateRandomSalt">Generate Salt</button>
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label for="iteration" class="col-sm-2">Iteration</label>
+        <div class="col-sm-6">
+          <input id="iteration" type="text" class="form-control" placeholder="Iteration" v-model="iteration">
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label for="hash-func" class="col-sm-2">Hash Function</label>
+        <div class="col-sm-6">
+          <select class="custom-select" id="hash-func" v-model="hashFunc">
+            <option disabled value="">---</option>
+            <option v-for="hash in hashs">[[ hash ]]</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label for="derive-bit" class="col-sm-2">Derive Bits</label>
+        <div class="col-sm-6">
+          <input id="derive-bit" type="text" class="form-control" placeholder="Bits" v-model="deriveBits">
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-primary" v-on:click="hashPassword">Hash Password</button>
+
+    </form>
+
+  </div>
+</div>
+
+<script>
+  'use strict';
+
+  var Utils = {
+    str2bytes: function (str) {
+      return (new Uint8Array(Array.prototype.map.call(str, function (c) {
+        return c.charCodeAt(0);
+      })));
+    },
+
+    bytes2base64: function (bytes) {
+      return window.btoa(String.fromCharCode.apply(String, bytes));
+    },
+
+    base642bytes: function (str) {
+      var binary = window.atob(str);
+      return this.str2bytes(binary);
+    },
+
+    importKey: function (password) {
+      return window.crypto.subtle.importKey(
+        'raw',
+        this.str2bytes(password),
+        {
+          name: 'PBKDF2',
+        },
+        false,
+        ['deriveBits']
+      );
+    },
+
+    deriveBits: function (key, salt, hashAlgorithm, iterations, bitNum) {
+      hashAlgorithm = hashAlgorithm || 'SHA-256';
+
+      return window.crypto.subtle.deriveBits(
+        {
+          name: 'PBKDF2',
+          salt: salt,
+          iterations: iterations,
+          hash: { name: hashAlgorithm }, //"SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+        },
+        key,
+        bitNum,
+      )
+    }
+  };
+
+  var app = new Vue({
+    delimiters: ['[[', ']]'],
+    el: '#hash-app',
+    data: {
+      algorithms: [
+        { name: 'Pbkdf2', wiki: 'https://en.wikipedia.org/wiki/PBKDF2' }
+      ],
+      hashs: ['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512'],
+      hashFunc: '',
+      saltText: '',
+      saltLength: 8,
+      iteration: 1000,
+      deriveBits: 144,
+      rawText: '',
+      result: ''
+    },
+    methods: {
+      hashPassword: function () {
+        let that = this;
+        Utils.importKey(this.rawText).then(function (key) {
+
+          return Utils.deriveBits(key, Utils.base642bytes(that.saltText),
+            that.hashFunc, that.iteration, that.deriveBits);
+        }).then(function (buffer) {
+          var bytes = new Uint8Array(buffer);
+          that.result = Utils.bytes2base64(bytes);
+        });
+
+      },
+
+      generateRandomSalt: function () {
+        let salt = window.crypto.getRandomValues(new Uint8Array(this.saltLength));
+        this.saltText = Utils.bytes2base64(salt);
+      },
+    },
+  });
+
+</script>
+
+{% endblock %}
