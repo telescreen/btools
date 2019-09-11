@@ -34,7 +34,7 @@ class Feed(models.Model):
     title = models.CharField(max_length=2000)
     link = models.CharField(max_length=1000)
     feed_id = models.CharField(max_length=1000)
-    content = models.TextField()
+    content = models.TextField(blank=True, null=True)
     author = models.CharField(max_length=200, null=True, blank=True)
     checked = models.BooleanField(default=False)
     rating = models.IntegerField(default=0)

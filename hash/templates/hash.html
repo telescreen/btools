@@ -150,7 +150,7 @@
         let that = this;
         Utils.importKey(this.rawText).then(function (key) {
 
-          return Utils.deriveBits(key, Utils.base642bytes(that.saltText),
+          return Utils.deriveBits(key, Utils.str2bytes(that.saltText),
             that.hashFunc, that.iteration, that.deriveBits);
         }).then(function (buffer) {
           var bytes = new Uint8Array(buffer);

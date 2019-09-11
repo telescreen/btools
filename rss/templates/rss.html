@@ -58,7 +58,7 @@
           </thead>
           <tbody>
             <tr v-for="(feed, idx) in feeds" v-on:click="displayFeed(idx)"
-                :class="{'feed-unread': !feed.checked}">
+                :class="{'feed-unread': !feed.checked, 'feed-chosen': current_feed_idx === idx}">
               <td class="col-10"><i class="far fa-sticky-note" v-if="!feed.checked"></i> [[ feed.title ]]</td>
               <td class="col-2">[[ feed.created_at ]]</td>
             </tr>
@@ -71,9 +71,9 @@
           <div class="card">
             <div class="card-header p-2">[[ content.title ]]</div>
             <a :href="content.link" target="_blank" class="card-link p-2">[[ content.link ]]</a>
-          </div>
-          <div class="card-body">
-            <p class="card-text" v-html="content.content"></p>
+            <div class="card-body">
+              <p class="card-text" v-html="content.content"></p>
+            </div>
           </div>
         </div>
       </div>
@@ -92,6 +92,8 @@
         source_name: '',
         categories: {},
         feeds: [],
+        // UI
+        current_feed_idx: undefined
       },
 
       created: function() {
@@ -129,6 +131,7 @@
         displayFeed: function(idx) {
           this.content = this.feeds[idx];
           this.content.checked = true;
+          this.current_feed_idx = idx;
           $.ajax({
             url: '/rss/updatefeed',
             headers: {'X-CSRFToken': Cookies.get('csrftoken')},

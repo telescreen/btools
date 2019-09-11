@@ -34,12 +34,14 @@ def fetch_feed():
                 else:
                     published = published.strftime('%Y-%m-%dT%H:%M:%S%z')
 
+                # Optional fields should be check in advance.
                 author = entry.get('author')
+                summary = entry.get('summary')
 
                 # Only insert the feed if feed does not already exist.
                 if not Feed.objects.filter(feed_id=entry.id).exists():
                     new_feed = Feed(title=entry.title, link=entry.link, feed_id=entry.id,
-                                    content=entry.summary, author=author,
+                                    content=summary, author=author,
                                     created_at=published, updated_at=published, source=source)
                     # This function commit a entry everytime it parses
                     # This might affects performance in production environment with lots of feeds.
