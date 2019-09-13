@@ -3,11 +3,12 @@
 {% block content %}
 {% load widget_tweaks %}
 {% load static %}
+<link rel="stylesheet" href="{% static "sidebar.css" %}">
 <link rel="stylesheet" href="{% static "rss.css" %}">
 <script src="https://cdn.jsdelivr.net/npm/vue"></script>
 <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
 
-<div class="wrapper" id="rss-app">
+<div class="wrapper-sidebar" id="rss-app">
 
   <nav class="sidebar" :class="{'active': hideSidebar}">
     <span><i class="fas fa-bars mt-3"></i> ALL</span>
@@ -93,10 +94,12 @@
         categories: {},
         feeds: [],
         // UI
-        current_feed_idx: undefined
+        current_feed_idx: undefined,
+        $timer: undefined
       },
 
       created: function() {
+        let UPDATE_INTERVAL = 1000 * 60 * 5; // Update the feed every 5 minutes
         let that = this;
 
         $.ajax({url: '/rss/loadcategories'}).done(function(data) {
@@ -107,6 +110,12 @@
           that.source_name = unempty_category.sources[0].name;
           that.updateFeed();
         });
+
+        this.$timer = setInterval(this.updateFeed, UPDATE_INTERVAL);
+      },
+
+      beforeDestroy: function() {
+        clearInterval(this.$timer);
       },
 
       methods: {
@@ -132,6 +141,8 @@
           this.content = this.feeds[idx];
           this.content.checked = true;
           this.current_feed_idx = idx;
+          this.source_name.unread_count --;
+
           $.ajax({
             url: '/rss/updatefeed',
             headers: {'X-CSRFToken': Cookies.get('csrftoken')},

@@ -37,10 +37,11 @@ def fetch_feed():
                 # Optional fields should be check in advance.
                 author = entry.get('author')
                 summary = entry.get('summary')
+                entry_id = entry.get('id')
 
                 # Only insert the feed if feed does not already exist.
-                if not Feed.objects.filter(feed_id=entry.id).exists():
-                    new_feed = Feed(title=entry.title, link=entry.link, feed_id=entry.id,
+                if not Feed.objects.filter(feed_id=entry_id).exists():
+                    new_feed = Feed(title=entry.title, link=entry.link, feed_id=entry_id,
                                     content=summary, author=author,
                                     created_at=published, updated_at=published, source=source)
                     # This function commit a entry everytime it parses

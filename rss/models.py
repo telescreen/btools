@@ -33,7 +33,7 @@ class Feed(models.Model):
     source = models.ForeignKey(Source, on_delete=models.CASCADE)
     title = models.CharField(max_length=2000)
     link = models.CharField(max_length=1000)
-    feed_id = models.CharField(max_length=1000)
+    feed_id = models.CharField(max_length=1000, null = True, blank = True)
     content = models.TextField(blank=True, null=True)
     author = models.CharField(max_length=200, null=True, blank=True)
     checked = models.BooleanField(default=False)

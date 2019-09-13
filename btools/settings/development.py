@@ -2,6 +2,11 @@
 
 from .base import *
 
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
+
+ALLOWED_HOSTS = ['']
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '%j0#tdfz+!d$jmvm&i$(c9#+n!ozm*kqjlpir6&)1zfr0fyu)i'
 
@@ -38,8 +43,9 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 STATIC_ROOT = 'static'
+MEDIA_ROOT = 'resources'
 
 ## CELERY specific settings
-CELERY_BROKER_URL = 'amqp://localhost'
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_CACHE_BACKEND = 'django-cache'

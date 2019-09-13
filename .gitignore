@@ -107,3 +107,6 @@ venv.bak/
 *.pid
 
 *.sqlite3
+
+# btools app
+resources

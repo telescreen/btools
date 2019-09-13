@@ -21,6 +21,7 @@ from django.conf import settings
 urlpatterns = [
     path('rss/', include('rss.urls')),
     path('hash/', include('hash.urls')),
+    path('stock/', include('stock.urls')),
     path('admin/', admin.site.urls),
 ]
 
