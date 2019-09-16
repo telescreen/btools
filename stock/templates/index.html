@@ -5,8 +5,8 @@
 {% load static %}
 <link rel="stylesheet" href="{% static "stock.css" %}">
 
-<table class="table">
-  <thead>
+<table class="table table-sm">
+  <thead class="thead-dark">
     <tr>
       <th scope="col">Company Name</th>
       <th scope="col">Quote</th>
@@ -17,7 +17,9 @@
   <tbody>
     {% for company in companies %}
     <tr >
-      <td>{{ company.name }}</td>
+      <td>
+        <a href="{% url 'stock-company-detail' company.quote %}">{{ company.name }}</a>
+      </td>
       <td>{{ company.quote }}</td>
       <td>{{ company.industry }}</td>
       <td>{{ company.summary }}</td>
@@ -25,4 +27,26 @@
     {% endfor %}
   </tbody>
 </table>
+
+<ul class="pagination pagination-sm">
+  {% if companies.has_previous %}
+  <li class="page-item"><a class="page-link" href="?page={{ companies.previous_page_number }}">&laquo;</a></li>
+  {% else %}
+  <li class="page-item disabled"><span>&laquo;</span></li>
+  {% endif %}
+
+  {% for i in companies.paginator.page_range %}
+  {% if companies.number == i %}
+  <li class="page-item active"><span class="page-link">{{ i }} <span class="sr-only">(current)</span></span></li>
+  {% else %}
+  <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+  {% endif %}
+  {% endfor %}
+
+  {% if companies.has_next %}
+  <li class="page-item"><a class="page-link" href="?page={{ companies.next_page_number }}">&raquo;</a></li>
+  {% else %}
+  <li class="page-item disabled"><span>&raquo;</span></li>
+  {% endif %}
+</ul>
 {% endblock %}

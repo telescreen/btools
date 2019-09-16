@@ -1,4 +1,4 @@
-# Celery Tasks to Fetch contents and parse Feeds
+""" Celery Tasks to Fetch contents and parse Feeds """
 
 import logging
 import time
@@ -8,7 +8,7 @@ from celery import shared_task
 from .models import Feed, Source
 
 # Get an instance of a logger
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 @shared_task
 def fetch_feed():
@@ -24,9 +24,9 @@ def fetch_feed():
             logger.info('--- Fetching %s ---', source.url)
             for entry in feeds.entries:
                 # Datetime parsed among RSS version is ntot
-                published = entry.get('published_parsed')
-                if not published:
-                    published = entry.get('updated_parsed') if entry.get('updated_parsed') else entry.get('created_parsed')
+                published = entry.get('published_parsed',
+                                      entry.get('updated_parsed',
+                                                entry.get('created_parsed')))
 
                 # Convert datetime back to string to store to database
                 if isinstance(published, time.struct_time):
@@ -53,7 +53,8 @@ def fetch_feed():
             source.modified = feeds.get('modified')
             source.save()
 
-            logger.info('Update etag and modified. etag=%s, modified=%s', feeds.get('etag'), feeds.get('modified'))
+            logger.info('Update etag and modified. etag=%s, modified=%s',
+                        feeds.get('etag'), feeds.get('modified'))
             logger.info('Done processing all new entries for %s', source.url)
 
         elif feeds.status == 304:

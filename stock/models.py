@@ -1,7 +1,14 @@
+""" Data Model for Stock Application """
+
 from django.db import models
 
 class Company(models.Model):
     """ A company store all company's general information """
+    class Meta:
+        indexes = [
+            models.Index(fields=['quote'], name='quote_idx')
+        ]
+
     quote = models.CharField(max_length=50, unique=True)
     name = models.CharField(max_length=500)
     summary = models.TextField()
@@ -27,6 +34,7 @@ class DailyStockPrice(models.Model):
     adjusted_price = models.FloatField()
 
     def __str__(self):
+        """ Return String to Price Data """
         return 'PriceData<{},{},{},{},{},{},{},{}>'.format(
             self.quote,
             self.date,

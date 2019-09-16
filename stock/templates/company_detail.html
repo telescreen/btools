@@ -1,0 +1,38 @@
+{% extends 'stock-base.html' %}
+
+{% block subcontent %}
+{% load widget_tweaks %}
+{% load static %}
+<link rel="stylesheet" href="{% static "stock.css" %}">
+
+<div class="card m-2">
+  <div class="card-header">
+    List of Companies in Nikkei MidAndSmall 400
+  </div>
+  <div class="card-body">
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col" class="col-4">Company Name</th>
+          <th scope="col" class="col-2">Quote</th>
+          <th scope="col" class="col-4">Industry</th>
+          <th scope="col" class="col-2">Index Share</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for company in companies %}
+        <tr >
+          <td class="col-4">
+            <a href="">{{ company.name }}</a>
+          </td>
+          <td class="col-2">{{ company.quote }}</td>
+          <td class="col-4">{{ company.industry }}</td>
+          <td class="col-2">{{ company.summary }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

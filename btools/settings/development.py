@@ -1,4 +1,5 @@
 # -*- Coding: utf-8 -*-
+# pylint: skip-file
 
 from .base import *
 
@@ -33,9 +34,17 @@ LOGGING = {
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
 DATABASES = {
+    #'default': {
+    #    'ENGINE': 'django.db.backends.sqlite3',
+    #    'NAME': 'btools-development.sqlite3'
+    #}
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'btools-development.sqlite3'
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'btools',
+        'USER': 'telescreen',
+        'PASSWORD': 'telescreen',
+        'HOST': '10.4.88.239',
+        'PORT': '5432',
     }
 }
 

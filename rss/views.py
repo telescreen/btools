@@ -1,23 +1,23 @@
 """ View functions for /rss path """
 
 import logging
-from django.utils import timezone
 import feedparser
 
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, HttpRequest
+from django.utils import timezone
 
 from .forms import CategoryForm, SourceForm
 from .models import Category, Feed
 
 
 # Get an instance of a logger
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)   # pylint: disable=invalid-name
 NUMBER_OF_FEEDS_PERPAGE = 100
 
 
-def index(request):
+def index(request: HttpRequest) -> HttpResponse:
     """ Display a news menu. Return all categories and static page to load feeds asynchronously """
     categories = Category.objects.all()
     category_form = CategoryForm()
@@ -29,7 +29,7 @@ def index(request):
     })
 
 
-def load_feeds(request, source_name=None):
+def load_feeds(request: HttpRequest, source_name: str = None) -> JsonResponse:
     """
     Return feed results for a source through ajax
     Response schema:
@@ -67,7 +67,7 @@ def load_feeds(request, source_name=None):
     return JsonResponse(result)
 
 
-def load_categories(request):
+def load_categories(request: HttpRequest) -> JsonResponse:
     """
     Return all categories in the database
     Response schema:
@@ -101,23 +101,25 @@ def load_categories(request):
     return JsonResponse(result)
 
 
-def update_feed(request):
+def update_feed(request: HttpRequest) -> JsonResponse:
     """ Update feed metadata """
     userdata = request.POST.copy()
-    checked = True if userdata.get('checked') == "true" else False
+    checked = (userdata.get('checked') == "true")
     feed_id = userdata.get('feed_id')
-    feed = Feed.objects.filter(pk=feed_id).first()
 
-    if feed:
+    try:
+        feed = Feed.objects.get(pk=feed_id)
         feed.checked = checked
         feed.updated_at = timezone.now()
         feed.save()
-        return JsonResponse({'status_code': 200, 'message': 'Successfully updated feed {}'.format(feed_id)})
-    else:
+        return JsonResponse({
+            'status_code': 200,
+            'message': 'Successfully updated feed {}'.format(feed_id)})
+    except Feed.DoesNotExist:
         return JsonResponse({'status_code': 404, 'message': 'Feed not found'}, status=404)
 
 
-def category_add(request):
+def category_add(request: HttpRequest) -> HttpResponse:
     """ Add a new rss category """
     if request.method == 'POST':
         # Process with adding category
@@ -132,7 +134,7 @@ def category_add(request):
     return redirect('/rss/')
 
 
-def source_add(request):
+def source_add(request: HttpRequest) -> HttpResponse:
     """ Add a new rss source """
     if request.method == 'POST':
         # Process with adding category
