@@ -28,29 +28,34 @@ def DailyPriceCrawler():
 def OneTimeCrawl(stock_quote, start_date, end_date):
     logger.info('--- Fetch data for {} from {} to {} --'.format(stock_quote, start_date, end_date))
 
-    sdate = datetime.strptime(start_date, '%Y/%m/%d')
-    edate = datetime.strptime(end_date, '%Y/%m/%d')
+    company = Company.objects.filter(quote=stock_quote).first()
+    if company:
+        logger.info("Company existed. Start fetching")
+        """ Only fetch a company stock price if that company exists """
+        sdate = datetime.strptime(start_date, '%Y/%m/%d')
+        edate = datetime.strptime(end_date, '%Y/%m/%d')
 
-    days = abs((edate - sdate).days)
-    weeks = _weekdiff(edate, sdate)
-    number_of_pages = int(days - weeks*2) // ITEM_PER_PAGE
-    for page in range(number_of_pages+1):
-        request_data = {
-            'code': stock_quote + '.T',
-            'sy': sdate.year,
-            'sm': sdate.month,
-            'sd': sdate.day,
-            'sy': sdate.year,
-            'sm': sdate.month,
-            'sd': sdate.day,
-            'p': page
-        }
-        r = requests.get(BASE_URL, params=request_data)
-        if r.status_code == 200:
-            print(_extractDailyStockPrice(stock_quote, r.text))
+        days = abs((edate - sdate).days)
+        weeks = _weekdiff(edate, sdate)
+        number_of_pages = int(days - weeks*2) // ITEM_PER_PAGE
+        for page in range(number_of_pages+1):
+            request_data = {
+                'code': stock_quote + '.T',
+                'sy': sdate.year,
+                'sm': sdate.month,
+                'sd': sdate.day,
+                'sy': sdate.year,
+                'sm': sdate.month,
+                'sd': sdate.day,
+                'p': page
+            }
+            r = requests.get(BASE_URL, params=request_data)
+            if r.status_code == 200:
+                _extractDailyStockPrice(company, r.text)
 
 
-def _extractDailyStockPrice(stock_quote, data):
+
+def _extractDailyStockPrice(company, data):
     """ Extract table using BeautifulSoup
     Return: an DailyStockPrice object with information extract from table
     Colume 1: DateTime
@@ -68,18 +73,22 @@ def _extractDailyStockPrice(stock_quote, data):
     # We skip the first <tr> element as it is the header row
     for tr in trs[1:]:
         tds = tr.find_all('td')
-        sts = StockTimeStamp(stock_quote, datetime.strptime(tds[0].text, '%Y年%m月%d日'))
+        sts = StockTimeStamp(quote=company, date=datetime.strptime(tds[0].text, '%Y年%m月%d日'), processed=False)
         sts.save()
 
-        print(DailyStockPrice(quote=sts.quote,
-                date=sts.date,    # DateTime
-                open_price=tds[1].text,    # Opening Price
-                high_price=tds[2].text,    # Highest Price
-                low_price=tds[3].text,    # Lowest Price
-                close_price=tds[4].text,    # Close Price
-                volume=tds[5].text,    # Volume
-                adjusted_price=tds[6].text     # Adjusted Price
-            ))
+        dailyPrice = DailyStockPrice(quote=company,
+            date=sts,                      # DateTime
+            open_price=tds[1].text,        # Opening Price
+            high_price=tds[2].text,        # Highest Price
+            low_price=tds[3].text,         # Lowest Price
+            close_price=tds[4].text,       # Close Price
+            volume=tds[5].text,            # Volume
+            adjusted_price=tds[6].text     # Adjusted Price
+        ))
+        dailyPrice.save()
+        sts.processed = True
+        sts.save()
+    return True
 
 
 def _weekdiff(day1, day2):

@@ -1,7 +1,7 @@
 """ View functions for /rss path """
 
 import logging
-from datetime import datetime
+from django.utils import timezone
 import feedparser
 
 from django.shortcuts import render, redirect
@@ -110,7 +110,7 @@ def update_feed(request):
 
     if feed:
         feed.checked = checked
-        feed.updated_at = datetime.now()
+        feed.updated_at = timezone.now()
         feed.save()
         return JsonResponse({'status_code': 200, 'message': 'Successfully updated feed {}'.format(feed_id)})
     else:
