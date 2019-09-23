@@ -5,12 +5,12 @@ import csv
 import logging
 
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, HttpRequest, Http404
+from django.http import HttpResponse, HttpRequest, Http404, JsonResponse
 from django.conf import settings
 from django.core.paginator import Paginator
 
 from .forms import CompanyDataUploadForm
-from .models import Company
+from .models import Company, DailyStockPrice, StockTimeStamp
 
 COMPANY_PER_PAGE = 20
 
@@ -24,7 +24,7 @@ def index(request: HttpRequest) -> HttpResponse:
     paginator = Paginator(companies, COMPANY_PER_PAGE)
 
     # Get page from GET variable. If page is not set, we set page to 1
-    page: int = request.GET.get('page', 1)
+    page: int = int(request.GET.get('page', '1'))
     company_list = paginator.get_page(page)
     return render(request, 'index.html', {'companies': company_list})
 
@@ -32,13 +32,26 @@ def index(request: HttpRequest) -> HttpResponse:
 def company_detail(request, stock_quote: int) -> HttpResponse:
     """ Return a view to Company details """
     try:
-        company = Company.object.get(quote=str(stock_quote))
+        company = Company.objects.get(quote=str(stock_quote))
         # TODO(me): Implement company detail view logic
     except Company.DoesNotExist:
         raise Http404("Company with releated quote does not exist")
+    return render(request, 'company_detail.html', { 'company': company })
 
-    return render(request, 'company_detail.html')
 
+
+def fetch_data(request: HttpRequest) -> JsonResponse:
+    """ Load data for stock quote """
+    stock_quote: str = request.GET.get('quote', None)
+    start_date: str = request.GET.get('sd', '')
+    end_date: str = request.GET.get('ed', '')
+
+    result = {}
+
+    if stock_quote:
+        company = Company.objects.filter(quote=stock_quote).first()
+        if company:
+            pass
 
 
 def upload_company(request: HttpRequest) -> HttpResponse:
@@ -55,8 +68,7 @@ def upload_company(request: HttpRequest) -> HttpResponse:
                     destination.write(chunk)
 
             # open csv
-            with open(path, 'r') as destination:
-                # read csv
+            with open(path, 'rb') as destination:
                 csv_reader = csv.reader(destination)
                 if form.cleaned_data.get('has_header'):
                     next(csv_reader)    # Ignore header

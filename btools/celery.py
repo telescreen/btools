@@ -5,7 +5,8 @@ from celery import Celery
 
 # set the default Django settings module for the 'celery' program.
 ENVIRONMENT = os.environ.get('DJANGO_ENVIRONMENT', 'development')
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'btools.settings.{}'.format(ENVIRONMENT))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE',
+                      'btools.settings.{}'.format(ENVIRONMENT))
 
 app = Celery('btools')  # pylint: disable=invalid-name
 
@@ -17,6 +18,7 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 
 # Load task modules from all registered Django app configs.
 app.autodiscover_tasks()
+
 
 @app.task(bind=True)
 def debug_task(self):

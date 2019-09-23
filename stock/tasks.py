@@ -7,8 +7,8 @@ from datetime import datetime, timedelta
 
 import requests
 from bs4 import BeautifulSoup
-
 from celery import shared_task
+
 from .models import StockTimeStamp, DailyStockPrice, Company
 
 # Get an instance of a logger

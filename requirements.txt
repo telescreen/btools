@@ -3,6 +3,10 @@ django-celery-beat==1.5.0
 django-celery-results==1.1.2
 django-timezone-field==3.0
 django-widget-tweaks==1.4.5
+django-filter=2.2.0
+django-stubs=1.1.0
+djangorestframework=3.10.3
+djangorestframework-stubs=1.0.0
 feedparser==5.2.1
 celery==4.3.0
 celery[redis]
@@ -12,6 +16,5 @@ redis==3.3.8
 psycopg2-binary=2.8.3
 mypy==0.720
 django-stubs=1.1.0
-pylint==2.3.1
-pylint-django==2.0.11
-pylint-plugin-utils==0.5
+flake8=3.7.8
+tox=3.14.0

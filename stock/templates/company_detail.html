@@ -4,35 +4,29 @@
 {% load widget_tweaks %}
 {% load static %}
 <link rel="stylesheet" href="{% static "stock.css" %}">
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.css">
 
-<div class="card m-2">
-  <div class="card-header">
-    List of Companies in Nikkei MidAndSmall 400
+<div class="wrapper-sidebar">
+  <div class="card m-2 w-50">
+    <div class="card-header">
+      {{ company.name }}
+    </div>
+    <div class="card-body">
+      <p>Company industry: {{ company.industry }} </p>
+      <p>Company stock quote: {{ company.quote }} </p>
+    </div>
   </div>
-  <div class="card-body">
-    <table class="table">
-      <thead>
-        <tr>
-          <th scope="col" class="col-4">Company Name</th>
-          <th scope="col" class="col-2">Quote</th>
-          <th scope="col" class="col-4">Industry</th>
-          <th scope="col" class="col-2">Index Share</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for company in companies %}
-        <tr >
-          <td class="col-4">
-            <a href="">{{ company.name }}</a>
-          </td>
-          <td class="col-2">{{ company.quote }}</td>
-          <td class="col-4">{{ company.industry }}</td>
-          <td class="col-2">{{ company.summary }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <div class="card m-2 w-50">
+    <div class="card-header">Daily stock Price Graph</div>
+    <div class="card-body">
+      <canvas id="stockPrice" class="w-100"></canvas>
+    </div>
   </div>
 </div>
+
+<script>
+
+</script>
 
 {% endblock %}

@@ -131,7 +131,7 @@ def category_add(request: HttpRequest) -> HttpResponse:
             messages.success(request, 'Category successfully added')
         else:
             messages.error(request, 'Could not create category. Category might already existed')
-    return redirect('/rss/')
+    return redirect('rss-index')
 
 
 def source_add(request: HttpRequest) -> HttpResponse:
@@ -150,4 +150,4 @@ def source_add(request: HttpRequest) -> HttpResponse:
 
             source.save()
             messages.success(request, 'Source successfully added')
-    return redirect('/rss/')
+    return redirect('rss-index')

@@ -10,6 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
+# flake8: noqa
+
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -21,6 +23,7 @@ INSTALLED_APPS = [
     'rss.apps.RssConfig',
     'hash.apps.HashConfig',
     'stock.apps.StockConfig',
+    'task.apps.TaskConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

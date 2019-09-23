@@ -22,9 +22,11 @@ urlpatterns = [
     path('rss/', include('rss.urls')),
     path('hash/', include('hash.urls')),
     path('stock/', include('stock.urls')),
+    path('task-manage/', include('task.urls')),
     path('admin/', admin.site.urls),
 ]
 
 # The development environment always has DEBUG enabled by default
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.MEDIA_URL,
+                          document_root=settings.MEDIA_ROOT)

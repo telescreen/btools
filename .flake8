@@ -1,0 +1,28 @@
+[flake8]
+show-source = True
+statistics = False
+doctests = True
+
+# Flake plugins:
+max-line-length = 80
+max-complexity = 6
+inline-quotes = single
+accept-encodings = utf-8
+isort-show-traceback = True
+
+# Excluding some directories:
+exclude = .git,__pycache__,.venv,.eggs,*.egg
+
+# Disable some pydocstyle checks:
+ignore = D100, D104, D106, D401, X100, W504
+
+# Docs: https://github.com/snoack/flake8-per-file-ignores
+# You can completely or partially disable our custom checks,
+# to do so you have to ignore `WPS` letters for all python files:
+per-file-ignores =
+  # Allow migrations to be named differently:
+  btools/*/migrations/*.py: WPS102
+  # Allow `__init__.py` with logic for configuration:
+  btools/settings/*.py: WPS226, WPS407, WPS412, WPS432
+  # Enable `assert` keyword and magic numbers for tests:
+  tests/*.py: S101, WPS432
