@@ -8,6 +8,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpRequest, Http404, JsonResponse
 from django.conf import settings
 from django.core.paginator import Paginator
+import django_tables2 as tables
 
 from .forms import CompanyDataUploadForm
 from .models import Company, DailyStockPrice, StockTimeStamp
@@ -18,15 +19,20 @@ COMPANY_PER_PAGE = 20
 logger = logging.getLogger(__name__) # pylint: disable=invalid-name
 
 
+class CompanyTable(tables.Table):
+    class Meta:
+        model = Company
+        exclude = ('id', )
+        attrs = {'class': 'table table-sm'}
+
+
 def index(request: HttpRequest) -> HttpResponse:
     """ Return a view to this application """
     companies = Company.objects.all()
-    paginator = Paginator(companies, COMPANY_PER_PAGE)
+    table = CompanyTable(companies)
+    table.paginate(page=request.GET.get("page", 1), per_page=COMPANY_PER_PAGE)
 
-    # Get page from GET variable. If page is not set, we set page to 1
-    page: int = int(request.GET.get('page', '1'))
-    company_list = paginator.get_page(page)
-    return render(request, 'index.html', {'companies': company_list})
+    return render(request, 'index.html', {'table': table})
 
 
 def company_detail(request, stock_quote: int) -> HttpResponse:

@@ -10,6 +10,7 @@ from django.utils import timezone
 
 from .forms import CategoryForm, SourceForm
 from .models import Category, Feed
+#from .filters import FeedFilter
 
 
 # Get an instance of a logger

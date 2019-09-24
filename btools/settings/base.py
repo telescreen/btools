@@ -33,6 +33,8 @@ INSTALLED_APPS = [
     'widget_tweaks',
     'django_celery_results',
     'django_celery_beat',
+    'django_filters',
+    'django_tables2',
 ]
 
 MIDDLEWARE = [
