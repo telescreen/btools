@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'django_filters',
     'django_tables2',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -105,3 +106,8 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_ACCEPT_CONTENT = ['json']  # Ignore other content
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_PROTOCOL = 1
+
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10
+}

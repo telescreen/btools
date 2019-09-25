@@ -26,13 +26,13 @@ class CompanyTable(tables.Table):
         attrs = {'class': 'table table-sm'}
 
 
-def index(request: HttpRequest) -> HttpResponse:
+def company_list(request: HttpRequest) -> HttpResponse:
     """ Return a view to this application """
     companies = Company.objects.all()
     table = CompanyTable(companies)
     table.paginate(page=request.GET.get("page", 1), per_page=COMPANY_PER_PAGE)
 
-    return render(request, 'index.html', {'table': table})
+    return render(request, 'company_list.html', {'table': table})
 
 
 def company_detail(request, stock_quote: int) -> HttpResponse:

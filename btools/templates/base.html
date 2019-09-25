@@ -2,6 +2,9 @@
 <html>
 
 <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>B tools</title>
   {% load static %}
   <link rel="shortcut icon" type="image/png" href="{% static "favicon-16x16.png" %}"/>
@@ -41,7 +44,7 @@
               <a class="dropdown-item" href="{% url 'rss-index' %}">RSS</a>
               <a class="dropdown-item" href="{% url 'hash-index' %}">Hash</a>
               <a class="dropdown-item" href="{% url 'stock-index' %}">Stock</a>
-              <a class="dropdown-item" href="{% url 'task-index' %}">Task</a>
+              <a class="dropdown-item" href="{% url 'task-index' %}">Task Management</a>
             </div>
           </li>
         </ul>
