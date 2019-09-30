@@ -21,7 +21,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 INSTALLED_APPS = [
     'rss.apps.RssConfig',
-    'hash.apps.HashConfig',
+    'utilsapp.apps.UtilsAppConfig',
     'stock.apps.StockConfig',
     'task.apps.TaskConfig',
     'django.contrib.admin',

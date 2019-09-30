@@ -22,7 +22,7 @@ from .routers import router
 
 urlpatterns = [
     path('rss/', include('rss.urls')),
-    path('hash/', include('hash.urls')),
+    path('utils/', include('utilsapp.urls')),
     path('stock/', include('stock.urls')),
     path('task-manage/', include('task.urls')),
     path('api/', include(router.urls)),
