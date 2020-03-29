@@ -9,6 +9,7 @@ urlpatterns = [
     path('loadcategories', views.load_categories),
     path('loadfeeds/<source_name>', views.load_feeds),
     path('updatefeed', views.update_feed),
+    path('markasread/<source_name>', views.mark_feeds_checked),
     path('category/add', views.category_add, name='rss-category-add'),
     path('source/add', views.source_add, name='rss-source-add'),
 ]

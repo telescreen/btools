@@ -50,6 +50,11 @@
     <div class="container mt-1">
       <h5>[[ source_name ]]</h5>
       <div class="border rounded-lg mt-1">
+        <div class="table-filter">
+          <a class="float-right" v-on:click="showUnread" href="#">Show Unread</a>
+          <a class="float-right" v-on:click="markAsRead" href="#">Mark as read</a>
+        </div>
+        </ul>
         <table class="table table-borderless table-sm table-fixed">
           <thead class="thead-dark">
             <tr>
@@ -94,12 +99,10 @@
         categories: {},
         feeds: [],
         // UI
-        current_feed_idx: undefined,
-        $timer: undefined
+        current_feed_idx: undefined
       },
 
       created: function() {
-        let UPDATE_INTERVAL = 1000 * 60 * 5; // Update the feed every 5 minutes
         let that = this;
 
         $.ajax({url: '/rss/loadcategories'}).done(function(data) {
@@ -110,12 +113,6 @@
           that.source_name = unempty_category.sources[0].name;
           that.updateFeed();
         });
-
-        this.$timer = setInterval(this.updateFeed, UPDATE_INTERVAL);
-      },
-
-      beforeDestroy: function() {
-        clearInterval(this.$timer);
       },
 
       methods: {
@@ -155,6 +152,27 @@
             console.log("Log failure here");
           });
         },
+
+        showUnread: function() {
+          var that = this;
+          $.ajax({
+            url: '/rss/loadfeeds/' + that.source_name + '?checked=False',
+            method: 'GET',
+          }).done(function(data) {
+            if (data.status_code == 200) {
+              that.content = data.feeds[0];
+              that.feeds = data.feeds;
+            }
+          });
+        },
+
+        markAsRead: function() {
+          var that = this;
+          $.ajax({
+            url: '/rss/markasread/' + that.source_name,
+            method: 'GET'
+          }).done(function() {})
+        }
       }
     });
   </script>

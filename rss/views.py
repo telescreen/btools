@@ -49,9 +49,16 @@ def load_feeds(request: HttpRequest, source_name: str = None) -> JsonResponse:
     # We will get the feed of the first source to display
     result = {}
     if source_name is not None:
-        feeds = Feed.objects\
-                    .filter(source__name=source_name)\
-                    .order_by('-created_at')[:NUMBER_OF_FEEDS_PERPAGE]
+        if 'checked' in request.GET:
+            checked = request.GET.get(checked)
+            feeds = Feed.objects\
+                        .filter(source__name=source_name)\
+                        .filter(checked=checked)\
+                        .order_by('-created_at')[:NUMBER_OF_FEEDS_PERPAGE]
+        else:
+            feeds = Feed.objects\
+                        .filter(source__name=source_name)\
+                        .order_by('-created_at')[:NUMBER_OF_FEEDS_PERPAGE]
         result['feeds'] = []
         for feed in feeds:
             result['feeds'].append({
@@ -66,6 +73,14 @@ def load_feeds(request: HttpRequest, source_name: str = None) -> JsonResponse:
         result['size'] = feeds.count()
         result['status_code'] = 200
     return JsonResponse(result)
+
+
+def mark_feeds_checked(request: HttpRequest, source_name: str = None) -> JsonResponse:
+    if source_name is not None:
+        Feed.objects\
+            .filter(source__name=source_name)\
+            .filter(checked=False).update(checked=True)
+    return JsonResponse({'status_code': 200, 'message': 'Successfully updated unchecked feed'})
 
 
 def load_categories(request: HttpRequest) -> JsonResponse:
