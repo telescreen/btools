@@ -125,6 +125,7 @@
             if (data.status_code == 200) {
               that.content = data.feeds[0];
               that.feeds = data.feeds;
+              that.source_name.unread_count = that.feeds.filter(function(feed) { return !feed.checked;} ).length;
             }
           });
         },

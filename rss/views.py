@@ -50,7 +50,7 @@ def load_feeds(request: HttpRequest, source_name: str = None) -> JsonResponse:
     result = {}
     if source_name is not None:
         if 'checked' in request.GET:
-            checked = request.GET.get(checked)
+            checked = request.GET.get('checked')
             feeds = Feed.objects\
                         .filter(source__name=source_name)\
                         .filter(checked=checked)\
