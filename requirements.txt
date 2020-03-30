@@ -5,6 +5,7 @@ django-timezone-field==3.0
 django-widget-tweaks==1.4.5
 django-filter==2.2.0
 django-stubs==1.1.0
+django-tables2==2.1.0
 djangorestframework==3.10.3
 djangorestframework-stubs==1.0.0
 feedparser==5.2.1

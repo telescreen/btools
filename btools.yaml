@@ -1,0 +1,61 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: btools
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: btools
+  labels:
+    env: development
+    app: btools
+  name: redis
+spec:
+  containers:
+  - image: redis
+    name: redis
+    imagePullPolicy: IfNotPresent
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: btools
+  labels:
+    env: development
+    app: btools
+  name: btools
+spec:
+  containers:
+  - image: talzeus/btools:latest
+    name: btools
+    imagePullPolicy: IfNotPresent
+  dnsPolicy: Default
+  restartPolicy: Never
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: btools
+  labels:
+    env: development
+    app: btools
+  name: celery
+spec:
+  containers:
+  - image: talzeus/btools:latest
+    name: worker
+    imagePullPolicy: IfNotPresent
+    command: ["/bin/sh"]
+    args: ["-c", "celery -A btools worker --loglevel info"]
+
+  - image: talzeus/btools:latest
+    name: beat
+    imagePullPolicy: IfNotPresent
+    command: ["/bin/sh"]
+    args: ["-c", "celery -A btools beat --loglevel info --scheduler django_celery_beat.schedulers:DatabaseScheduler"]
+
+  dnsPolicy: Default
+  restartPolicy: Never

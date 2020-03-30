@@ -1,0 +1,61 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: btools-pvc
+  namespace: btools
+  labels:
+    env: development
+    app: postgres
+spec:
+  storageClassName: microk8s-hostpath
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: btools
+  name: postgres-cm
+data:
+  POSTGRES_PASSWORD: password
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: btools
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        env: development
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:10
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgredb
+          env:
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              configMapKeyRef:
+                name: postgres-cm
+                key: POSTGRES_PASSWORD
+      dnsPolicy: Default
+      volumes:
+        - name: postgredb
+          persistentVolumeClaim:
+            claimName: btools-pvc
