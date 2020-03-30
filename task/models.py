@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.db import models
 
 
+# --- Models ---
 class Project(models.Model):
     PLANNING = 1
     ON_GOING = 2
@@ -51,7 +52,8 @@ class Task(models.Model):
     priority = models.IntegerField(choices=PRIORITY, default=MIDDLE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now_add=True)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, related_name='tasks',
+                                on_delete=models.CASCADE)
 
 
 class Checklist(models.Model):
@@ -63,7 +65,23 @@ class Checklist(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
 
 
+# --- Serializers ---
+
+class ProjectListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Project
+        fields = '__all__'
+
+
+class TaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = '__all__'
+
+
 class ProjectSerializer(serializers.ModelSerializer):
+    tasks = TaskSerializer(many=True, read_only=True)
+
     class Meta:
         model = Project
         fields = '__all__'

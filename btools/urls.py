@@ -18,14 +18,11 @@ from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
 
-from .routers import router
-
 urlpatterns = [
     path('rss/', include('rss.urls')),
     path('utils/', include('utilsapp.urls')),
     path('stock/', include('stock.urls')),
     path('task-manage/', include('task.urls')),
-    path('api/', include(router.urls)),
     path('admin/', admin.site.urls),
 ]
 
