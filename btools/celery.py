@@ -4,9 +4,7 @@ import os
 from celery import Celery
 
 # set the default Django settings module for the 'celery' program.
-ENVIRONMENT = os.environ.get('DJANGO_ENVIRONMENT', 'development')
-os.environ.setdefault('DJANGO_SETTINGS_MODULE',
-                      'btools.settings.{}'.format(ENVIRONMENT))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'btools.settings')
 
 app = Celery('btools')  # pylint: disable=invalid-name
 
