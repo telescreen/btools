@@ -8,22 +8,16 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
 && rm -rf /var/lib/apt/lists/*
 
+RUN useradd -m -u 1000 -s /bin/bash ubuntu
+ENV PATH="/home/ubuntu/.local/bin:${PATH}"
 # Due to https://github.com/pypa/pip/issues/5599
 RUN python3 -m pip install --upgrade pip
 
-COPY . /app/btools
-RUN mkdir -p /app/pip_cache_dir
-WORKDIR /app/btools
-
-RUN pip3 install -r requirements.txt
-
+USER ubuntu
+COPY --chown=ubuntu:ubuntu . /home/ubuntu/btools
+WORKDIR /home/ubuntu/btools
+RUN mkdir -p /home/ubuntu/btools/pip_cache_dir
+RUN python3 -m pip install -r requirements.txt --cache-dir /home/ubuntu/btools/pip_cache_dir
 # Run Application
-
-ENV BTOOLS_PORT 8000
-ENV BTOOLS_DATABASE_HOST 10.224.105.13
-ENV BTOOS_DATABASE btools
-ENV BTOOLS_DATABASE_USER telescreen
-ENV BTOOLS_DATABASE_PASSWORD telescreen
-
 EXPOSE 8080
 CMD python3 manage.py runserver 0:8080

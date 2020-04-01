@@ -1,8 +1,16 @@
 ---
 apiVersion: v1
-kind: Namespace
+kind: ConfigMap
 metadata:
-  name: btools
+  namespace: btools
+  name: btools-config
+data:
+  BTOOLS_DB_HOST: "postgres.btools.svc.cluster.local"
+  BTOOLS_DB_PORT: "5432"
+  BTOOLS_DB_USER: "telescreen"
+  BTOOLS_DB_PASSWORD: "password"
+  BTOOLS_BROKER_URI: "redis://redis.btools.svc.cluster.local:6379/0"
+
 ---
 apiVersion: v1
 kind: Pod
@@ -10,13 +18,28 @@ metadata:
   namespace: btools
   labels:
     env: development
-    app: btools
+    app: redis
   name: redis
 spec:
   containers:
   - image: redis
     name: redis
     imagePullPolicy: IfNotPresent
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: btools
+  labels:
+    env: development
+  name: redis
+spec:
+  selector:
+    app: redis
+  type: ClusterIP 
+  ports:
+  - port: 6379
 ---
 apiVersion: v1
 kind: Pod
@@ -28,11 +51,28 @@ metadata:
   name: btools
 spec:
   containers:
-  - image: talzeus/btools:latest
+  - image: talzeus/btools:1.0
     name: btools
-    imagePullPolicy: IfNotPresent
-  dnsPolicy: Default
+    imagePullPolicy: Always
+    envFrom:
+    - configMapRef:
+        name: btools-config
   restartPolicy: Never
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: btools
+  labels:
+    env: development
+  name: btools
+spec:
+  selector:
+    app: btools
+  type: LoadBalancer 
+  ports:
+  - port: 8080
 
 ---
 apiVersion: v1
@@ -41,21 +81,25 @@ metadata:
   namespace: btools
   labels:
     env: development
-    app: btools
+    app: celery
   name: celery
 spec:
   containers:
-  - image: talzeus/btools:latest
+  - image: talzeus/btools:1.0
     name: worker
-    imagePullPolicy: IfNotPresent
+    imagePullPolicy: Always
     command: ["/bin/sh"]
     args: ["-c", "celery -A btools worker --loglevel info"]
+    envFrom:
+    - configMapRef:
+        name: btools-config
 
-  - image: talzeus/btools:latest
+  - image: talzeus/btools:1.0
     name: beat
-    imagePullPolicy: IfNotPresent
+    imagePullPolicy: Always
     command: ["/bin/sh"]
     args: ["-c", "celery -A btools beat --loglevel info --scheduler django_celery_beat.schedulers:DatabaseScheduler"]
-
-  dnsPolicy: Default
+    envFrom:
+    - configMapRef:
+        name: btools-config
   restartPolicy: Never
