@@ -1,0 +1,54 @@
+version: '3.7'
+services:
+  redis:
+    image: redis:5
+    container_name: redis
+    volumes:
+    - ./data/redis:/data
+    - ./conf/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    expose:
+    - 6379
+  postgres:
+    image: postgres:10.12
+    container_name: postgres
+    volumes:
+    - ./data/postgres:/var/lib/postgresql/data
+    environment:
+    - POSTGRES_PASSWORD=password
+    expose:
+    - 5432
+  btools:
+    image: talzeus/btools:1.0
+    container_name: btools
+    environment:
+    - BTOOLS_DB_HOST=postgres
+    - BTOOLS_DB_PORT=5432
+    - BTOOLS_DB_USER=telescreen
+    - BTOOLS_DB_PASSWORD=password
+    - BTOOLS_BROKER_URI=redis://redis:6379/0
+    ports:
+    - 0.0.0.0:80:8080
+    depends_on: ["redis", "postgres"]
+  celery-worker:
+    image: talzeus/btools:1.0
+    container_name: celery-worker
+    command: ["/bin/sh", "-c", "celery -A btools worker --loglevel info"]
+    environment:
+    - BTOOLS_DB_HOST=postgres
+    - BTOOLS_DB_PORT=5432
+    - BTOOLS_DB_USER=telescreen
+    - BTOOLS_DB_PASSWORD=password
+    - BTOOLS_BROKER_URI=redis://redis:6379/0
+    depends_on: ["redis", "postgres"]
+  celery-beat:
+    image: talzeus/btools:1.0
+    container_name: celery-beat
+    command: ["/bin/sh", "-c", "celery -A btools beat --loglevel info --scheduler django_celery_beat.schedulers:DatabaseScheduler"]
+    environment:
+    - BTOOLS_DB_HOST=postgres
+    - BTOOLS_DB_PORT=5432
+    - BTOOLS_DB_USER=telescreen
+    - BTOOLS_DB_PASSWORD=password
+    - BTOOLS_BROKER_URI=redis://redis:6379/0
+    depends_on: ["redis", "postgres"]
